@@ -1,4 +1,4 @@
-use crate::Function;
+use crate::{call, define, Function};
 
 define! {
     /// Identity function. Returns its input.
@@ -21,7 +21,7 @@ define! {
     /// ```ignore
     /// λf.λg.λx.fgx
     /// ```
-    pub fn Compose ( Fn: A, OtherFn: B) => Composed<Fn, OtherFn>;
+    pub fn Compose ( Fn: A, OtherFn: B ) => Composed<Fn, OtherFn>;
     /// The composition of two functions. See [`Compose`].
     pub fn Composed<Fn, OtherFn> ( Input: T ) 
         where
