@@ -1,5 +1,7 @@
 # lambda-rs
 
+!["Lambda calculus? In *my* type system?" (It's more likely than you think.)](assets/banner.png)
+
 An implementation of the Lambda Calculus in Rust, only using ZSTs, traits, and generics.
 
 Work in progress.
