@@ -3,7 +3,11 @@
 /*!
 lambda-rs
 ===
-Lambda calculus? In *my* type system? _(It's more likely than you think.)_
+*/
+#![doc = concat!("![
+    Lambda calculus? In *my* type system? _(It's more likely than you think.)_
+](", include_str!("../assets/image_data_url.txt"), ")")]
+/*!
 ---
 
 Implements [the Lambda Calculus](https://en.wikipedia.org/wiki/Lambda_calculus) in Rust's type system.
