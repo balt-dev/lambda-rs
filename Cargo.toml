@@ -1,6 +1,6 @@
 [package]
 name = "lambda-types"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["baltdev"]
 description = "Puts the lambda calculus in Rust...'s type system."
