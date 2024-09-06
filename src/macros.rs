@@ -9,8 +9,11 @@
 
     These "function type" items may have an arbitrary amount of attributes.
 
+    Due to how the macro is implemented, `cfg` attributes must be specified _with a @ instead of #_, like this:
+    `@[cfg(feature = "abc")]`
+
     The body of one of these items is as follows:
-    ```ignore
+    ```text
     pub fn Name<A, B> ::= { C. D. { A, B {C, D}}}
         where A: B, {A, B}: {C, D}, /* ... */;
     ```
@@ -31,27 +34,35 @@
       In order for the compiler to accept your function, you must tell the compiler in these clauses
       that all arguments used in the definition are actually _able_ to be used in the way they're used.
 
-      A good strategy is to write the definition out without it, then keep checking the compiler errors
-      until it stops erroring. 
+      A good strategy is to write each call out in the where clause while you're writing, like this:
+      ```text
+      fn F ::= { A. B. C. { C, {B, A}, C }} where
+           B: A, // B calls A
+           C: {B, A}, // C calls {B, A}
+           {C, {B, A}}: C; // {C, {B, A}} calls C
+      ```
     
     Unfortunately, due to implementation complexity, anonymous functions like this:
-    ```ignore
+    ```text
     // λn.λf.λx. n (λg.λh. h (g f)) (λu.x) (λu.u)
     pub fn Predecessor ::= { N. F. X. { N {G. H. H { G, F }}, Constant<X>, Identity } };
     ```
     are unsupported.
     Instead, you can break it up into smaller definitions, like this:
-    ```ignore
+    ```text
     pub fn Predecessor ::= { N. F. X. { N, Pred_1<F>, Constant<X>, Identity } };
     fn Pred_1<F> ::= { G. H. { H { G, F } } };
     ```
     which is actually the definition used in `crate::math::Predecessor`, sans the `where` clauses.
+
+    This macro is **hygienic**.
     
  */
 macro_rules! define {
     (
         $(
             $(#[$meta: meta])*
+            $(@[$modmeta: meta])*
             $vis: vis fn $identifier: ident 
                 $(< $($typearg: ident),+ >)? 
             ::= { $($definition: tt)+ }
@@ -61,6 +72,7 @@ macro_rules! define {
     ) => {::paste::paste! {
         $(
         #[allow(non_snake_case)]
+        $(#[$modmeta])*
         mod [< __$identifier >] {
             #![allow(unused_parens, non_camel_case_types, unused_imports)]
             use super::*;
@@ -72,6 +84,7 @@ macro_rules! define {
                 $(where $($lhs: $rhs),+)? 
             }
         }
+        $(#[$modmeta])*
         $vis use [< __$identifier >]::$identifier;
         )*
     }};
@@ -130,6 +143,8 @@ macro_rules! define {
     So, for example, `ab(c(de)f)gh` translates to `a, b, { c, { d, e }, f }, g, h`.
 
     The whitespace isn't mandatory, but is recommended for readibility (see: `a,b{c,{d,e},f},g,h`).
+
+    This macro is **hygienic**.
  */
 #[macro_export]
 macro_rules! call {
@@ -150,6 +165,8 @@ macro_rules! call {
     Chains applications of a function onto many arguments.
     
     For example, `chained!(Composed with A, B, C, D)` expands to `Composed<A, Composed<B, Composed<C, D>>>`.
+
+    This macro is **hygienic**.
  */
 #[macro_export]
 macro_rules! chained {

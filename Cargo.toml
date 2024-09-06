@@ -5,3 +5,7 @@ edition = "2021"
 
 [dependencies]
 paste = "1"
+
+[features]
+default = []
+const-numeral = []

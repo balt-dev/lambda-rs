@@ -10,7 +10,7 @@ pub type Zero = crate::primitives::SecondOf;
 
 define! {
     /// Successor function. Returns a number plus one.
-    /// ```ignore
+    /// ```text
     /// λn.λf.λx.f(nfx)
     /// ```
     pub fn Successor ::= {
@@ -21,7 +21,7 @@ define! {
         F: {N, F, X};
 
     /// Adds two church numerals.
-    /// ```ignore
+    /// ```text
     /// S ::= Successor
     /// λm.λn.mSn
     /// ```
@@ -33,7 +33,7 @@ define! {
     pub fn Multiply ::= { X. Y. { Composed<X, Y> }};
 
     /// Predecessor function. Gets the number below a given church numeral.
-    /// ```ignore
+    /// ```text
     /// λn.λf.λx. n (λg.λh. h (g f)) (λu.x) (λu.u)
     /// ```
     pub fn Predecessor ::= { N. F. X. { N, Pred_1<F>, Constant<X>, Identity }} where
@@ -46,7 +46,7 @@ define! {
         G: F;
     
     /// Subtracts two church numerals.
-    /// ```ignore
+    /// ```text
     /// P ::= Predecessor
     /// λm.λn.nPm
     /// ```
@@ -55,14 +55,14 @@ define! {
         {N, Predecessor}: M;
     
     /// Raises a numeral to the power of another.
-    /// ```ignore
+    /// ```text
     /// λm.λn.nm
     /// ```
     pub fn Exponent ::= { M. N. { N, M }} where N: M;
 
 
     /// Returns whether a number is zero.
-    /// ```ignore
+    /// ```text
     /// F ::= False
     /// T ::= True
     /// λn.n(λx.F)T
@@ -73,7 +73,7 @@ define! {
     
     
     /// Returns whether one number is less than or equal to another.
-    /// ```ignore
+    /// ```text
     /// ? ::= IsZero
     /// - ::= Subtract
     /// λm.λn.?(-mn)
@@ -85,7 +85,7 @@ define! {
     
     
     /// Returns whether two numbers are equal.
-    /// ```ignore
+    /// ```text
     /// & ::= And
     /// ≤ ::= Leq
     /// λm.λn.&(≤mn)(≤nm)
@@ -97,9 +97,10 @@ define! {
         {And, { Leq, M, N }}: { Leq, N, M };
 
     /// Converts a church numeral to a constant number. See [`ConstNumber`].
-    /// ```ignore
+    /// ```text
     /// λn.n{0}(λ{X}.{X + 1})
     /// ```
+    @[cfg(any(doc, feature = "const-numeral"))]
     pub fn ToNumber ::= { N. { N, ConstIncrement, ConstNumber<0> }} where
         N: ConstIncrement,
         ConstIncrement: (ConstNumber<0>),
@@ -108,18 +109,28 @@ define! {
 
 // Due to const generics, this has to be explicitly declared.
 /// Increments a [`ConstNumber`] by one. Used to define [`ToNumber`].
-/// ```ignore
+/// ```text
 /// λ{X}.{X + 1}
 /// ```
+#[cfg(any(doc, feature = "const-numeral"))]
 pub struct ConstIncrement;
 /// Constant number returned by converting a church numeral.
+#[cfg(any(doc, feature = "const-numeral"))]
 pub struct ConstNumber<const N: u64>;
 
+#[cfg(any(doc, feature = "const-numeral"))]
 impl<const N: u64> Function<ConstNumber<N>> for ConstIncrement
 where
     ConstNumber<{ N + 1 }>: Sized,
 {
     type Output = ConstNumber<{ N + 1 }>;
+}
+
+#[cfg(any(doc, feature = "const-numeral"))]
+impl<const N: u64> ConstNumber<N> {
+    /// Extracts the number argument from a constant number.
+    #[inline]
+    pub const fn value() -> u64 { N }
 }
 
 #[cfg(test)]

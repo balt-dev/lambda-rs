@@ -7,21 +7,21 @@ pub type False = primitives::SecondOf;
 
 define! {
     /// Boolean and operation. Takes two church booleans, and returns whether both are true.
-    /// ```ignore
+    /// ```text
     /// λa.λb.aba
     /// ```
     pub fn And ::= {Lhs. Rhs. { Lhs, Rhs, Lhs }} where 
         Lhs: Rhs,
         {Lhs, Rhs}: Lhs;
     /// Boolean or operation. Takes two church booleans, and returns whether either is true.
-    /// ```ignore
+    /// ```text
     /// λa.λb.aab
     /// ```
     pub fn Or ::= {Lhs. Rhs. { Lhs, Lhs, Rhs }} where
         Lhs: Lhs,
         {Lhs, Lhs}: Rhs;
     /// Boolean xor operation. Takes two church booleans, and returns whether only one is true.
-    /// ```ignore
+    /// ```text
     /// N ::= Not
     /// λa.λb.a(Nb)b
     /// ```
@@ -30,7 +30,7 @@ define! {
         Lhs: { Not, Rhs },
         {Lhs, { Not, Rhs }}: Rhs;
     /// Boolean not operation. Takes a church boolean and returns its inverse.
-    /// ```ignore
+    /// ```text
     /// T ::= True
     /// F ::= False
     /// λv.vFT
@@ -39,7 +39,7 @@ define! {
         Value: False,
         {Value, False}: True;
     /// Alternation. Takes a church boolean and two values, and returns the first if the boolean is true, otherwise the second.
-    /// ```ignore
+    /// ```text
     /// λp.λa.λb.pab
     /// ```
     pub fn If ::= {Predicate. Truthy. Falsy. { Predicate, Truthy, Falsy }} where

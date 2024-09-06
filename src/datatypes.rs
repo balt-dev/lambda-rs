@@ -1,29 +1,33 @@
 
 
-use crate::prelude::*;
+use crate::{
+    primitives::Constant,
+    boolean::{True, False},
+    define
+};
 
 define! {
     /// Pair of two values.
-    /// ```ignore
+    /// ```text
     /// λx.λy.λf.fxy
     /// ```
     pub fn Pair ::= { X. Y. F. { F, X, Y }} where
         F: X,
         {F, X}: Y;
     /// Gets the first element of a pair.
-    /// ```ignore
+    /// ```text
     /// T ::= True
     /// λp.pT
     /// ```
     pub fn First ::= { P. { P, True }} where P: True;
     /// Gets the second element of a pair.
-    /// ```ignore
+    /// ```text
     /// F ::= False
     /// λp.pF
     /// ```
     pub fn Second ::= { P. { P, False }} where P: False;
     /// Tests whether a value is [`Nil`].
-    /// ```ignore
+    /// ```text
     /// F ::= False
     /// λp.p(λx.λy.F)
     /// ```
