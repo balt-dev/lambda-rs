@@ -57,8 +57,6 @@
 
     Reading through how the crate defines function types is highly recommended to get a grasp on the syntax!
 
-g
-
     This macro is **hygienic**.
     
  */

@@ -1,12 +1,13 @@
 [package]
 name = "lambda-types"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 authors = ["baltdev"]
 description = "Puts the lambda calculus in Rust...'s type system."
 license = "MIT"
 repository = "https://github.com/balt-dev/lambda-rs"
 documentation = "https://docs.rs/lambda-types/"
+keywords = ["types",  "cursed"]
 
 [dependencies]
 paste = "1"
