@@ -8,7 +8,7 @@ Instead, if any of the statics fail, then this will fail to compile.
 
 */
 
-use lambda_rs::prelude::*;
+use lambda_types::prelude::*;
 
 type One = call!{ Successor, Zero };
 type Two = call!{ Successor, One };
