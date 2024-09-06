@@ -4,8 +4,6 @@
 
 An implementation of the Lambda Calculus in Rust, only using ZSTs, traits, and generics.
 
-Work in progress.
-
 ```rust
 use lambda_rs::{call, math::*};
 
