@@ -50,7 +50,7 @@ crate::define! {
     /// ```text
     /// λx.λy.λz.xz(yz)
     /// ```
-    pub fn Schoenfinkel ::= { X. Y. Z. {X, Z, { Y, Z }}} where
+    pub fn Sheinfinkel ::= { X. Y. Z. {X, Z, { Y, Z }}} where
         X: Z, Y: Z, {X, Z}: {Y, Z};
 
     /// Takes a function that takes two arguments and the first argument to said function,

@@ -12,7 +12,7 @@ There is **zero** runtime functionality _or_ procedural macros in this crate - i
 
 If you want to toy around with this, check out the [`prelude`].
 
-If you want to write your own function types, check out the [`macros`].
+If you want to write your own function types, check out the [Macros](#macros).
 
 **The Y combinator is left unimplemented, as Rust evaluates types greedily, making it unusable.**
 */
