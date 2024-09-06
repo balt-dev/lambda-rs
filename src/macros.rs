@@ -53,7 +53,11 @@
     pub fn Predecessor ::= { N. F. X. { N, Pred_1<F>, Constant<X>, Identity } };
     fn Pred_1<F> ::= { G. H. { H { G, F } } };
     ```
-    which is actually the definition used in `crate::math::Predecessor`, sans the `where` clauses.
+    which is actually the definition used in [`crate::math::Predecessor`], sans the `where` clauses.
+
+    Reading through how the crate defines function types is highly recommended to get a grasp on the syntax!
+
+g
 
     This macro is **hygienic**.
     
@@ -117,7 +121,7 @@ macro_rules! define {
     } };
     (
         @impl $ident: ident ; $($args: ident)*; 
-        { $name: ident . { $($definition: tt)+ } } $(where $($lhs: tt:$rhs: tt),+)? 
+        { $name: ident . $definition: tt } $(where $($lhs: tt:$rhs: tt),+)?
     ) => {
         #[allow(non_camel_case_types)]
         impl<$($args, )* $name> $crate::Function<$name> for $ident <$($args, )*>
@@ -128,7 +132,7 @@ macro_rules! define {
                 ),+
             )?
         {
-            type Output = $crate::call!{ $($definition)+ };
+            type Output = $crate::call!{ $definition };
         }
     };
 }

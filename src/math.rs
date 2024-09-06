@@ -30,7 +30,7 @@ define! {
         {M, Successor}: N;
 
     /// Multiplies two church numerals - this is simply composition.
-    pub fn Multiply ::= { X. Y. { Composed<X, Y> }};
+    pub fn Multiply ::= { X. Y. (Composed<X, Y>) };
 
     /// Predecessor function. Gets the number below a given church numeral.
     /// ```text
@@ -106,7 +106,7 @@ define! {
         ConstIncrement: (ConstNumber<0>),
         {N, ConstIncrement}: (ConstNumber<0>);
 
-    
+
 }
 
 // Due to const generics, this has to be explicitly declared.
@@ -146,7 +146,7 @@ mod test {
     #[test]
     fn main() {
         let _: call!{
-            Eq, Three, Three
+            Eq, {Multiply, Two, Three}, {Add, Three, Three}
         } = <True>::default();
     }
 }
