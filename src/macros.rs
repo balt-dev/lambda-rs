@@ -1,70 +1,162 @@
-#[macro_export]
-macro_rules! define {
-    ($(
-        $(#[$attrs: meta])* 
-        $vis: vis fn $name: ident $(< $($typeargs: ident),+ >)? ( $($argnames: ident: $args: ty),* ) 
-        $(where $($guardty: ty : $guardpath: path),+)? 
-        => $output: ty;
-    )*) => {$(
-        $(#[$attrs])*
-        #[allow(non_camel_case_types, unused_parens)]
-        $vis struct $name $(< $($typeargs),+ >)? {
-            _phantom: ::core::marker::PhantomData<($($($typeargs),+)?)>
-        }
-        $crate::define!(@inner $vis $name $(< $($typeargs),+ >)? ($($argnames: $args),* ;) $(where $($guardty: $guardpath),+)? => $output);
-    )*};
-    (@inner 
-        $vis: vis $name: ident $(< $($typeargs: ident),+ >)? ( 
-            $argname: ident: $arg: ty $(, $argnames: ident: $args: ty)+ ; 
-            $($handledname: ident : $handledarg: ty),*
-        ) $(where $($guardty: ty : $guardpath: path),+)? => $output: ty
-    ) => {
-        ::paste::paste! {
-            #[allow(non_camel_case_types, unused_parens)]
-            impl<$argname $(, $handledname)* $(, $($typeargs),+)?> $crate::Function<$argname> for $crate::define!(@inner_args $(< $($typeargs),+ >)? $name $($handledname)* ) {
-                type Output = [< $name _ $argname >]<$argname $(, $handledname)*>;
-            }
-            #[doc(hidden)]
-            #[allow(non_camel_case_types, unused_parens)]
-            $vis struct [< $name _ $argname >]<$arg $(, $handledarg)*> {
-                _phantom: ::core::marker::PhantomData<($arg $(, $handledarg)*)>
-            }
-            $crate::define! {
-                @inner $vis [< $name _ $argname >] ($($argnames : $args),* ; $argname: $arg $(, $handledname : $handledarg)*) $(where $($guardty: $guardpath),+)? => $output
-            }
-        }
-    };
-    (@inner $vis: vis $name: ident $(< $($typeargs: ident),+ >)? ( $inputname: ident : $input: ty ; $($paramname: ident : $param: ty),* ) $(where $($guardty: ty : $guardpath: path),+)? => $output: ty) => { ::paste::paste! {
-        impl<$inputname $(, $paramname)* $($(, $typeargs)+)?> Function<$inputname> for $crate::define!(@inner_args $(< $($typeargs),+ >)? $name $($paramname)* )
-            $(where $(
-                $guardty: $guardpath
-            ),+)?
-        {
-            type Output = $output;
-        }
-    }};
-    (@inner $name: ident $(< $($typeargs: ident),+ >)? ( ; ) => $output: ty) => { ::paste::paste! {
-        impl<Input> Function<Input> for $name $(< $($typeargs),+ >)? {
-            type Output = $output;
-        }
-    }};
-    (@inner_args $(< $($typeargs: ident),+ >)? $name: ident) => { $name $(< $($typeargs),+ >)? };
-    (@inner_args $name: ident $($handledname: ident)+) => { $name < $($handledname),+ >};
-    (@inner_args < $($typeargs: ident),+ > $name: ident $($handledname: ident)+) => { $name < $($handledname, )+ $($typeargs), +>}
-}
+
 
 #[macro_export]
+/**
+    Helper macro for easily defining types that implement [`crate::Function`].
+
+    ## Syntax
+    The body of the macro should contain an arbitrary amount of "function type" items, ending in semicolons.
+
+    These "function type" items may have an arbitrary amount of attributes.
+
+    The body of one of these items is as follows:
+    ```ignore
+    pub fn Name<A, B> ::= { C. D. { A, B {C, D}}}
+        where A: B, {A, B}: {C, D}, /* ... */;
+    ```
+    It's quite a bit to take in, but it's actually quite simple! Let's break it down.
+
+    - The visibility specifier `pub` is optional, defaulting to private, as expected of any other item.
+    
+    - The `Name` is the name of the type that's publicly exported by the macro. 
+      As you can see, type parameters are also supported, but const generics are unfortunately not.
+
+    - Following the `::=` is the actual definition enclosed in `{}` braces.
+      Everything within the brackets is implicitly passed to `crate::call`.
+
+    - The `where` clauses are an unfortunate consequence of using a declarative macro instead of a procedural one,
+      as the macro can't generate one _for_ us due to the inability to use macro calls as parameter guards.
+      Both sides of each clause are implicitly passed to `crate::call`.
+
+      In order for the compiler to accept your function, you must tell the compiler in these clauses
+      that all arguments used in the definition are actually _able_ to be used in the way they're used.
+
+      A good strategy is to write the definition out without it, then keep checking the compiler errors
+      until it stops erroring. 
+    
+    Unfortunately, due to implementation complexity, anonymous functions like this:
+    ```ignore
+    // λn.λf.λx. n (λg.λh. h (g f)) (λu.x) (λu.u)
+    pub fn Predecessor ::= { N. F. X. { N {G. H. H { G, F }}, Constant<X>, Identity } };
+    ```
+    are unsupported.
+    Instead, you can break it up into smaller definitions, like this:
+    ```ignore
+    pub fn Predecessor ::= { N. F. X. { N, Pred_1<F>, Constant<X>, Identity } };
+    fn Pred_1<F> ::= { G. H. { H { G, F } } };
+    ```
+    which is actually the definition used in `crate::math::Predecessor`, sans the `where` clauses.
+    
+ */
+macro_rules! define {
+    (
+        $(
+            $(#[$meta: meta])*
+            $vis: vis fn $identifier: ident 
+                $(< $($typearg: ident),+ >)? 
+            ::= { $($definition: tt)+ }
+            $(where $($lhs: tt : $rhs: tt),+ $(,)?)?  
+        ;
+        )*
+    ) => {::paste::paste! {
+        $(
+        #[allow(non_snake_case)]
+        mod [< __$identifier >] {
+            #![allow(unused_parens, non_camel_case_types, unused_imports)]
+            use super::*;
+            
+            $crate::define!{ @item $(#[$meta])* $identifier ; $($($typearg)+)? }
+            $crate::define!{ 
+                @impl $identifier; $($($typearg)+)? ; 
+                { $($definition)+ }
+                $(where $($lhs: $rhs),+)? 
+            }
+        }
+        $vis use [< __$identifier >]::$identifier;
+        )*
+    }};
+    (
+        @item $(#[$meta: meta])* $name: ident ; $($($typearg: ident)+)?
+    ) => { 
+        $(#[$meta])*
+        #[allow(unused_parens)]
+        #[allow(non_camel_case_types)]
+        #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Default)]
+        pub struct $name $( < $($typearg),+ > )? {
+            _p: ::core::marker::PhantomData<($($($typearg,)+)?)>
+        }
+    };
+    (
+        @impl $ident: ident ; $($arg: ident)*; 
+        { $name: ident . $name2: ident . $($definition: tt)+ } $(where $($lhs: tt:$rhs: tt),+)? 
+    ) => { ::paste::paste! {
+        #[allow(non_camel_case_types)]
+        impl<$($arg, )* $name> $crate::Function<$name> for $ident < $($arg,)* > {
+            type Output = [< $ident __ $name >] <$($arg,)* $name>;
+        }
+        $crate::define! {
+            @item #[doc(hidden)] [< $ident __ $name >] ; $($arg)* $name
+        }
+        $crate::define! {
+            @impl [<$ident __ $name>] ; $($arg)* $name; 
+            { $name2 . $($definition)+ } $(where $($lhs : $rhs),+)?
+        }
+    } };
+    (
+        @impl $ident: ident ; $($args: ident)*; 
+        { $name: ident . { $($definition: tt)+ } } $(where $($lhs: tt:$rhs: tt),+)? 
+    ) => {
+        #[allow(non_camel_case_types)]
+        impl<$($args, )* $name> $crate::Function<$name> for $ident <$($args, )*>
+            $(
+                where 
+                $(
+                    $crate::call!($lhs) : $crate::Function<$crate::call!($rhs)>
+                ),+
+            )?
+        {
+            type Output = $crate::call!{ $($definition)+ };
+        }
+    };
+}
+
+/**
+    Ergonomic wrapper macro for calling a function.
+    
+    Calling syntax is modeled around the lambda calculus, where:
+    - `fx` is translated to `f, x`
+    - `f(...)` is translated to `f, {...}`
+
+    So, for example, `ab(c(de)f)gh` translates to `a, b, { c, { d, e }, f }, g, h`.
+
+    The whitespace isn't mandatory, but is recommended for readibility (see: `a,b{c,{d,e},f},g,h`).
+ */
+#[macro_export]
 macro_rules! call {
-    ($name: ty { $name2: ty $({ $($arg: tt)+ })+ } $({ $($arg2: tt)+ })+) => {
-        call!( call!($name { $name2 $({ $($arg)+ })+ }) $({ $($arg2)+ })+ )
-    };
-    ($name: ty { $arg: ty } $({ $($arg2: tt)+ })+) => {
-        call!( call!($name { $arg }) $({ $($arg2)+ })+ )
-    };
-    ($name: ty { $name2: ty $({ $($arg: tt)+ })+ }) => {
-        call!( $name { call!( $name2 $({ $($arg)+ } )+)})
-    };
-    ($name: ty { $arg: ty }) => {
+    ({$($wrapped: tt)+}) => { $crate::call!($($wrapped)+) };
+    ($name: ty) => { $name };
+    ($name: ty , $arg: ty) => {
         <$name as $crate::Function<$arg>>::Output
+    };
+    ($name: ty , { $($arg: tt)+ } $($arg2: tt)*) => {
+        $crate::call!( $crate::call!($name , $crate::call!($($arg)+) ) $($arg2)* )
+    };
+    ($name: ty , $arg: ty , $($arg2: tt)+) => {
+        $crate::call!( $crate::call!($name , $arg), $($arg2)+ )
+    };
+}
+
+/**
+    Chains applications of a function onto many arguments.
+    
+    For example, `chained!(Composed with A, B, C, D)` expands to `Composed<A, Composed<B, Composed<C, D>>>`.
+ */
+#[macro_export]
+macro_rules! chained {
+    ($name: ident with $lhs: ty, $rhs: ty $(, $extra: ty)+) => {
+        $name<$lhs, $crate::chained!($name with $rhs $(, $extra)+)>
+    };
+    ($name: ident with $lhs: ty, $rhs: ty) => {
+        $name<$lhs, $rhs>
     }
 }
