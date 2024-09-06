@@ -2,6 +2,9 @@
 name = "lambda-rs"
 version = "0.1.0"
 edition = "2021"
+authors = ["baltdev"]
+description = "Puts the lambda calculus in Rust...'s type system."
+license = "MIT"
 
 [dependencies]
 paste = "1"
