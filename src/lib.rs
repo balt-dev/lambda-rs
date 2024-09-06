@@ -1,7 +1,7 @@
 #![cfg_attr(any(doc, feature = "const-numeral"), feature(generic_const_exprs))]
 
 /*!
-lambda-rs
+lambda-types
 ===
 */
 #![doc = concat!("![

@@ -23,7 +23,7 @@ crate::define! {
     /// Composes a function with another.
     /// Note that this returns a [`Composed`], for more ergonomic point-free form.
     /// ```text
-    /// λf.λg.λx.fgx
+    /// λf.λg.(λx.f(gx))
     /// ```
     pub fn Compose ::= { A. B. { Composed<A, B> }};
     
@@ -31,11 +31,11 @@ crate::define! {
     /// ```text
     /// λx.FGx
     /// ```
-    pub fn Composed<Fn, OtherFn> 
-        ::= { Input. { Fn, { OtherFn, Input }}}
+    pub fn Composed<F, G> 
+        ::= { Input. { F, { G, Input }}}
     where
-        OtherFn: Input,
-        Fn: {OtherFn, Input};
+        G: Input,
+        F: {G, Input};
     
     /// Takes a function and an input, and returns the function applied to said input.
     /// ```text

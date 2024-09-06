@@ -98,13 +98,15 @@ define! {
 
     /// Converts a church numeral to a constant number. See [`ConstNumber`].
     /// ```text
-    /// λn.n{0}(λ{X}.{X + 1})
+    /// λn.n(λ{X}.{X + 1}){0}
     /// ```
     @[cfg(any(doc, feature = "const-numeral"))]
     pub fn ToNumber ::= { N. { N, ConstIncrement, ConstNumber<0> }} where
         N: ConstIncrement,
         ConstIncrement: (ConstNumber<0>),
         {N, ConstIncrement}: (ConstNumber<0>);
+
+    
 }
 
 // Due to const generics, this has to be explicitly declared.
