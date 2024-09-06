@@ -5,7 +5,7 @@
 An implementation of the Lambda Calculus in Rust, only using ZSTs, traits, and generics.
 
 ```rust
-use lambda_rs::{call, math::*};
+use lambda_rs::prelude::*;
 
 type Two = call! { Successor { Successor { Zero } } };
 type Three = call! { Successor { Two } };
